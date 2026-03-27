@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package stonfi.common;
+
+message AssetId {
+  // Chain ID
+  string chain_id = 1;
+
+  // Local asset ID
+  string local_id = 2;
+}
+
+// Generic address
+// TODO: integrate to omni
+message ChainAddress {
+  // Chain ID
+  string chain_id = 1;
+
+  // Blockchain-specific part of the address.
+  string address = 2;
+}

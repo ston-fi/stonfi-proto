@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package stonfi.omni.v1beta8;
+
+import "stonfi/common/types.proto";
+
+message HtlcOrderDetailsV1 {
+  // The ID of quote received from `QuoteRpc`
+  string quote_id = 1;
+
+  stonfi.common.AssetId output_asset = 2;
+
+  // The address on **Destination** blockchain that should receive tokens after
+  // disclosing of the secret.
+  stonfi.common.ChainAddress trader_dst_address = 3;
+
+  // The address on **Destination** blockchain that must disclose the secret to
+  // claim the position on the **Destination** blockchain.
+  //
+  // This address should be omitted when using public disclosure of the secret.
+  optional stonfi.common.ChainAddress trader_dst_disclose_address = 4;
+
+  // List of hashes of the secrets for each execution attempt by HTLC.
+  //
+  // The secrets are hashed with the function specified in
+  // `EscrowSettlementData` of the `Quote`.
+  repeated bytes secret_hashes = 5;
+
+  // TODO: Dutch auction info
+}
+
+message VersionedHtlcOrderDetails {
+  oneof details { HtlcOrderDetailsV1 version1 = 1; }
+}
+
+message SecretModeGenerated {
+  // Request the system to generate secrets automatically for the specified
+  // number of executions.
+  uint32 max_executions = 1;
+}
+
+message SecretModeProvided {
+  // List of hashes of the secrets for each execution attempt by HTLC.
+  //
+  // The trader must use the hashing function specified in
+  // `OrderSettlementData`.
+  repeated bytes hashes = 1;
+}
+
+// Allows to specify how the secrets for a multi-chunk HTLC position should be
+// defined.
+message HtlcSecrets {
+
+  oneof secret_mode {
+
+    // Request the system to generate secrets automatically for the specified
+    // number of executions.
+    SecretModeGenerated generated = 30;
+
+    // Provide an explicit, ordered list of secret hashes (one per chunk).
+    // Each hash must be a 32-byte value matching the on-chain chunk indexing.
+    //
+    // The trader must use the hashing function specified in
+    // `OrderSettlementData`.
+    SecretModeProvided provided = 31;
+  }
+}

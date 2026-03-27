@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package stonfi.omni.v1beta8;
+
+import "stonfi/common/types.proto";
+import "stonfi/omni/v1beta8/types/htlc.proto";
+
+message BuildEvmOrderPayloadRequest {
+
+  string quote_id = 1;
+
+  // The address on **Source** blockchain that will own created position, can
+  // withdraw tokens and will receive withdrawn tokens.
+  stonfi.common.ChainAddress owner_src_address = 2;
+
+  // The address on **Destination** blockchain that will receive result of the
+  // trade
+  optional stonfi.common.ChainAddress trader_dst_address = 4;
+
+  // (HTLC-only) Allows to specify how the secrets for a multi-chunk HTLC
+  // position should be defined.
+  //
+  // This parameter should be omitted for intrachain swaps
+  optional HtlcSecrets htlc_secrets = 20;
+
+  // (HTLC-only) The address on **Destination blockchain** that can disclose the
+  // secret to claim the **Output position**.
+  //
+  // This address should be omitted when using public disclosure of the secret.
+  optional stonfi.common.ChainAddress trader_dst_disclose_address = 21;
+}
+
+message EvmOrderPayloadResponse {
+
+  // Json structure that contains TypedData param for signing with
+  // `eth_signTypedData` as specified by EIP-712.
+  //
+  // This message includes at least required `types`, `primaryType`, `domain`
+  // and `message` fields.
+  string typed_data = 1;
+
+  // Encoded extension data of the order.
+  //
+  // This data should be used when registering Intent.
+  bytes order_extension = 2;
+
+  // Off-chain **Order details** in protobuf-serialized form.
+  optional bytes serialized_order_details = 3;
+}
+
+message BuildEvmOrderCancellationRequest {
+  // ID of the quote corresponding to the order being cancelled.
+  string quote_id = 1;
+
+  // The address on **Source** blockchain that will sign the cancellation.
+  //
+  // This address must match the wallet that signed the corresponding **Signed
+  // Order**.
+  stonfi.common.ChainAddress owner_src_address = 2;
+}
+
+message EvmOrderCancellationResponse {
+  // Json structure that contains TypedData param for signing with
+  // `eth_signTypedData` as specified by EIP-712.
+  //
+  // This message includes at least required `types`, `primaryType`, `domain`
+  // and `message` fields.
+  string typed_data = 1;
+}
+
+// EVM-specific functions
+service EvmRpc {
+
+  rpc BuildOrderPayload(BuildEvmOrderPayloadRequest)
+      returns (EvmOrderPayloadResponse) {}
+
+  rpc BuildOrderCancellation(BuildEvmOrderCancellationRequest)
+      returns (EvmOrderCancellationResponse) {}
+}
