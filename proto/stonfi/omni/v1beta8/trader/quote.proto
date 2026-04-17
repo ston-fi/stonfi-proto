@@ -15,6 +15,7 @@ message QuoteRequestAck {
   string rfq_id = 1;
 }
 
+// One event in the quote stream returned for an RFQ.
 message QuoteEvent {
   oneof event {
     // Server sends acknowledge immediately upon reception of QuoteRequest and
@@ -27,12 +28,10 @@ message QuoteEvent {
     NoQuoteEvent no_quote = 11;
     // The service message to keep connection alive.
     KeepAlive keep_alive = 100;
-    // Service message indicating that a request for quote has expired. Used
-    // only in WebSockets API.
-    Unsubscribed unsubscribed = 101;
   }
 }
 
+// Trader-facing API for requesting streaming quote updates.
 service QuoteRpc {
   // Request for quote.
   //

@@ -2,7 +2,8 @@ syntax = "proto3";
 
 package stonfi.omni.v1beta8;
 
-import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/common/v1/types/chain_address.proto";
 import "stonfi/omni/v1beta8/types/common.proto";
 import "stonfi/omni/v1beta8/types/order.proto";
 import "stonfi/omni/v1beta8/types/quote.proto";
@@ -23,7 +24,7 @@ message ProtocolParams {
   // settlement.
   //
   // This parameter is omitted for intrachain swaps
-  optional stonfi.common.AssetId src_security_deposit_asset = 10;
+  optional stonfi.common.v1.AssetId src_security_deposit_asset = 10;
 
   // (HTLC-Only) Volume of the security deposit  on the **Source** blockchain in
   // units of `src_security_deposit_asset`.
@@ -36,7 +37,7 @@ message ProtocolParams {
   // settlement.
   //
   // This parameter is omitted for intrachain swaps
-  optional stonfi.common.AssetId dst_security_deposit_asset = 12;
+  optional stonfi.common.v1.AssetId dst_security_deposit_asset = 12;
 
   // (HTLC-Only) Volume of the security deposit  on the **Destination**
   // blockchain in units of `dst_security_deposit_asset`.
@@ -44,15 +45,16 @@ message ProtocolParams {
   // This parameter is omitted for intrachain swaps
   optional string dst_security_deposit_units = 13;
 
-  // Maximum duration since quote generation before the trader must make valid
+  // Maximum duration since quote generation before the trader must make a valid
   // deposit.
   sint64 quote_validity_timeout = 20;
 
   // Maximum duration since the trader creates the position before the resolver
-  // must reserve the position.
+  // must reserve it.
   //
-  // At the end of this period trader's position becomes available for
-  // withdrawal and Dutch auction starts if specified by escrow condition.
+  // At the end of this timeout, exclusivity ends. The trader's position may
+  // become available for withdrawal, and Dutch auction may start if specified
+  // by the escrow condition.
   sint64 exclusivity_timeout = 21;
 }
 
@@ -128,13 +130,19 @@ message QuoteRejectedEvent {
   // ID of RFQ from prior `QuoteRequestedEvent` (SHA-256 hex string)
   string rfq_id = 1;
 
-  // TODO: Comment
+  // Machine-readable reason why the submitted quote was rejected.
+  //
+  // Clients should primarily branch on this field. The exact human-readable
+  // text in `message` is not stable enough for program logic.
   QuoteRejectedCode code = 2;
 
-  // TODO: Comment
+  // Human-readable explanation of the rejection.
+  //
+  // This field is intended for logs and debugging.
   string message = 3;
 }
 
+// Machine-readable quote rejection codes returned to resolvers.
 enum QuoteRejectedCode {
 
   // Uncategorized error
@@ -189,15 +197,16 @@ message OrderUpdatedEvent {
 
   // Available number of secrets on the position for chunk reservation.
   //
+  // This limits how many additional HTLC executions can still be reserved.
   // This parameter is only valid for HTLC positions. For intrachain this value
   // is always 0.
   uint64 remaining_secrets = 3;
 
   // Timestamp (UTC seconds) after which the trader can cancel the order without
-  // filling remaining position.
+  // filling the remaining position.
   //
-  // If this timestamp has passed, the order can be cancelled any moment.
-  // Exclusivity period (if defined) also ends on this timestamp.
+  // After this timestamp passes, the order can be cancelled at any moment.
+  // Any exclusivity period for the order also ends on this timestamp.
   uint64 cancellation_available_timestamp = 10;
 
   // If defined, the position is temporarily available exclusively for the
@@ -205,17 +214,29 @@ message OrderUpdatedEvent {
   //
   // If omitted, the position is public (not exclusively reserved) and the trade
   // is available to all resolvers for partial fills.
-  optional stonfi.common.ChainAddress exclusive_resolver_address = 11;
+  optional stonfi.common.v1.ChainAddress exclusive_resolver_address = 11;
 
   // Off-chain **Order details** in protobuf-serialized form.
+  //
+  // This payload contains exactly the same serialized `VersionedHtlcOrderDetails`
+  // that was produced when the order was created, and whose hash is embedded
+  // into the corresponding signed order or escrow-backed position.
+  //
+  // The resolver may recompute the hash of this byte payload and verify that it
+  // matches the hash committed on-chain, which proves that the trader signed
+  // this exact intent.
+  //
+  // The payload is transferred in serialized form to avoid differences in
+  // binary representation after a deserialize-serialize cycle.
   optional bytes serialized_order_details = 20;
 
+  // Definition of **Trader**'s position.
   oneof position {
     // Defines a position residing on the escrow contract.
-    stonfi.common.ChainAddress escrow_address = 21;
+    stonfi.common.v1.ChainAddress escrow_address = 21;
 
-    // Defines a **Signed Order** for settling the gasless position residing on
-    // the Trader's wallet.
+    // Defines a **Signed Order** for settling a gasless position that remains
+    // on the trader's wallet instead of an escrow contract.
     SignedOrder signed_order = 22;
   }
 
@@ -249,22 +270,36 @@ message ExecutionUpdatedEvent {
   // Current status of execution.
   Execution execution = 2;
 
-  // The 256-bit value of the secret used by the completion flow.
+  // The 256-bit value of the secret used by the HTLC completion flow.
   // If it is empty, the secret has not been revealed yet.
   //
-  // This parameter is omitted if the secret hasn't been published yet and for
+  // This parameter is omitted if the secret has not been published yet and for
   // intrachain swaps.
   optional bytes secret = 10;
 
   // Off-chain **Order details** in protobuf-serialized form.
+  //
+  // This payload contains exactly the same serialized `VersionedHtlcOrderDetails`
+  // that was produced when the order was created, and whose hash is embedded
+  // into the corresponding signed order or escrow-backed position.
+  //
+  // The resolver may recompute the hash of this byte payload and verify that it
+  // matches the hash committed on-chain, which proves that the trader signed
+  // this exact intent.
+  //
+  // The payload is transferred in serialized form to avoid differences in
+  // binary representation after a deserialize-serialize cycle.
   optional bytes serialized_order_details = 20;
 
+  // Top-level trader's **Trader**'s position.
+  //
+  // This value is identical to the one specified in `OrderUpdatedEvent`.
   oneof position {
     // Defines a position residing on the escrow contract.
-    stonfi.common.ChainAddress escrow_address = 21;
+    stonfi.common.v1.ChainAddress escrow_address = 21;
 
-    // Defines a **Signed Order** for settling the gasless position residing on
-    // the Trader's wallet.
+    // Defines a **Signed Order** for settling a gasless position that remains
+    // on the trader's wallet instead of an escrow contract.
     SignedOrder signed_order = 22;
   }
 }
@@ -273,10 +308,10 @@ message ExecutionUpdatedEvent {
 message ResolverAddressSignedEvent {
 
   // Address of the resolver that has been signed.
-  stonfi.common.ChainAddress resolver_address = 1;
+  stonfi.common.v1.ChainAddress resolver_address = 1;
 
   // Address of the protocol contract for which the signature was generated.
-  stonfi.common.ChainAddress protocol_contract_address = 2;
+  stonfi.common.v1.ChainAddress protocol_contract_address = 2;
 
   // Public key used by the signature.
   bytes public_key = 3;
@@ -288,6 +323,7 @@ message ResolverAddressSignedEvent {
   uint64 validity_deadline = 5;
 }
 
+// One event sent by the protocol to a connected resolver.
 message ResolverEvent {
 
   // These fields allow multiplexing over a single gRPC stream by matching

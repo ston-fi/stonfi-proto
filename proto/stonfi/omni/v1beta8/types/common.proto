@@ -6,17 +6,13 @@ package stonfi.omni.v1beta8;
 // alive.
 message KeepAlive {}
 
-// Service message indicating that a request has expired.
-//
-// Used only for WebSocket API.
-// TODO: Remove if not needed
-message Unsubscribed {}
-
+// Hashing functions supported by HTLC-related flows.
 enum HashingFunction {
   HASHING_FUNCTION_KECCAK256 = 0;
   HASHING_FUNCTION_SHA256 = 1;
 }
 
+// High-level status of a trade, order, or swap lifecycle.
 enum TradeStatus {
   // The trade has been created and may still be settled successfully.
   TRADE_STATUS_IN_PROGRESS = 0;

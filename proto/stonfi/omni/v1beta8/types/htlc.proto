@@ -2,52 +2,58 @@ syntax = "proto3";
 
 package stonfi.omni.v1beta8;
 
-import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/common/v1/types/chain_address.proto";
 
+// Version 1 of the off-chain HTLC order-details structure.
 message HtlcOrderDetailsV1 {
   // The ID of quote received from `QuoteRpc`
   string quote_id = 1;
 
-  stonfi.common.AssetId output_asset = 2;
+  stonfi.common.v1.AssetId output_asset = 2;
 
-  // The address on **Destination** blockchain that should receive tokens after
-  // disclosing of the secret.
-  stonfi.common.ChainAddress trader_dst_address = 3;
+  // The address on **Destination** blockchain that should receive the
+  // **Output asset** after the secret is disclosed.
+  stonfi.common.v1.ChainAddress trader_dst_address = 3;
 
   // The address on **Destination** blockchain that must disclose the secret to
-  // claim the position on the **Destination** blockchain.
+  // claim or redeem the **Output position** on the **Destination** blockchain.
   //
-  // This address should be omitted when using public disclosure of the secret.
-  optional stonfi.common.ChainAddress trader_dst_disclose_address = 4;
+  // This address is distinct from `trader_dst_address`.
+  // It should be omitted when using public disclosure of the secret.
+  optional stonfi.common.v1.ChainAddress trader_dst_disclose_address = 4;
 
-  // List of hashes of the secrets for each execution attempt by HTLC.
+  // Ordered list of secret hashes, one per HTLC execution attempt.
   //
   // The secrets are hashed with the function specified in
-  // `EscrowSettlementData` of the `Quote`.
+  // `OrderSettlementData.htlc_hashing_function` of the `Quote`.
   repeated bytes secret_hashes = 5;
 
   // TODO: Dutch auction info
 }
 
+// Versioned wrapper for off-chain HTLC order details.
 message VersionedHtlcOrderDetails {
   oneof details { HtlcOrderDetailsV1 version1 = 1; }
 }
 
+// Requests protocol-side generation of HTLC secrets.
 message SecretModeGenerated {
   // Request the system to generate secrets automatically for the specified
-  // number of executions.
+  // number of executions. One secret is generated per execution/chunk.
   uint32 max_executions = 1;
 }
 
+// Provides explicit HTLC secret hashes instead of generating them server-side.
 message SecretModeProvided {
-  // List of hashes of the secrets for each execution attempt by HTLC.
+  // Ordered list of secret hashes, one per HTLC execution attempt.
   //
   // The trader must use the hashing function specified in
-  // `OrderSettlementData`.
+  // `OrderSettlementData.htlc_hashing_function`.
   repeated bytes hashes = 1;
 }
 
-// Allows to specify how the secrets for a multi-chunk HTLC position should be
+// Allows the trader to choose how secrets for a multi-chunk HTLC position are
 // defined.
 message HtlcSecrets {
 
@@ -61,7 +67,7 @@ message HtlcSecrets {
     // Each hash must be a 32-byte value matching the on-chain chunk indexing.
     //
     // The trader must use the hashing function specified in
-    // `OrderSettlementData`.
+    // `OrderSettlementData.htlc_hashing_function`.
     SecretModeProvided provided = 31;
   }
 }

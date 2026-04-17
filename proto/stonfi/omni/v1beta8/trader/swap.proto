@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package stonfi.omni.v1beta8;
 
-import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/chain_address.proto";
 import "stonfi/omni/v1beta8/types/swap.proto";
 
 //////////////////////////////////////////////
@@ -15,7 +15,7 @@ message TrackSwapRequest {
   string quote_id = 1;
 
   // The address of trader's wallet that initiated transaction
-  stonfi.common.ChainAddress trader_address = 2;
+  stonfi.common.v1.ChainAddress trader_address = 2;
 
   // Identifier that allows to find outgoing transaction.
   //
@@ -27,6 +27,7 @@ message TrackSwapRequest {
   string outgoing_tx_query = 3;
 }
 
+// Trader-facing API for tracking swap settlement progress.
 service SwapRpc {
 
   // Request to track the settling of the trade

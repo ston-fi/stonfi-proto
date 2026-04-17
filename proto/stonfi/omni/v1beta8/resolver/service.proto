@@ -5,6 +5,8 @@ package stonfi.omni.v1beta8;
 import "stonfi/omni/v1beta8/resolver/request.proto";
 import "stonfi/omni/v1beta8/resolver/event.proto";
 
+// Bidirectional streaming API used by resolvers to connect, receive events,
+// and send protocol requests.
 service ResolverRpc {
   // Connects the resolver to the protocol.
   //

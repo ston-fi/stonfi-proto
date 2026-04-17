@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package stonfi.omni.v1beta8;
 
-import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/chain_address.proto";
 
 ////////////////////////////////////////////////////////////////////
 // Data structures
@@ -46,7 +46,7 @@ message ResolverQuote {
 
   // Address of the resolver on **Source** blockchain that should receive
   // **Input asset**.
-  stonfi.common.ChainAddress resolver_src_address = 1;
+  stonfi.common.v1.ChainAddress resolver_src_address = 1;
 
   // Amount of **Input asset** that will be received by the resolver.
   //
@@ -57,7 +57,7 @@ message ResolverQuote {
 
   // Address of the resolver on **Destination** blockchain that should send
   // **Output asset** to the trader.
-  stonfi.common.ChainAddress resolver_dst_address = 3;
+  stonfi.common.v1.ChainAddress resolver_dst_address = 3;
 
   // Amount of **Output asset** that the resolver will use to fill the trade.
   //
@@ -85,19 +85,21 @@ message UpdateQuoteRequest {
   ResolverQuote quote = 10;
 }
 
+// Requests invalidation of a previously submitted quote.
 message InvalidateQuoteRequest {
   // ID of RFQ from prior `QuoteRequestedEvent` (SHA-256 hex string)
   string rfq_id = 1;
 }
 
+// Requests a protocol-specific signature for a resolver address.
 message SignResolverAddressRequest {
 
   // Address of the resolver that will fill the trades.
-  stonfi.common.ChainAddress resolver_address = 1;
+  stonfi.common.v1.ChainAddress resolver_address = 1;
 
   // Address of the protocol contract for which the signature should be
   // generated.
-  stonfi.common.ChainAddress protocol_contract_address = 2;
+  stonfi.common.v1.ChainAddress protocol_contract_address = 2;
 }
 
 // Requests from resolver.

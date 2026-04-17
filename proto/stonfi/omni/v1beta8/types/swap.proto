@@ -2,7 +2,8 @@ syntax = "proto3";
 
 package stonfi.omni.v1beta8;
 
-import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/common/v1/types/chain_address.proto";
 import "stonfi/omni/v1beta8/types/common.proto";
 
 //////////////////////////////////////////////
@@ -16,8 +17,8 @@ message SwapRoute { repeated SwapStep steps = 1; }
 // Represents a single step in a route: `TON -> USDC -> USDT` route consists of
 // `TON -> USDC` & `USDC -> USDT` steps.
 message SwapStep {
-  stonfi.common.AssetId input_asset = 1;
-  stonfi.common.AssetId output_asset = 2;
+  stonfi.common.v1.AssetId input_asset = 1;
+  stonfi.common.v1.AssetId output_asset = 2;
   repeated SwapChunk chunks = 3;
 }
 
@@ -33,19 +34,21 @@ message SwapChunk {
 // Swap progress details
 //////////////////////////////////////////////
 
+// Result of a single swap chunk execution.
 enum SwapChunkResult {
   SWAP_CHUNK_RESULT_PROCESSING = 0;
   SWAP_CHUNK_RESULT_FILLED = 1;
   SWAP_CHUNK_RESULT_ABORTED = 2;
 }
 
+// Progress details of a single swap chunk.
 message SwapChunkProgress {
   string protocol = 1;
   // Address of the contract that processes this chunk.
   //
   // Generally, this address receives input tokens.
   // More specifically, it might be the address of a protocol or liquidity pool.
-  stonfi.common.ChainAddress target_address = 2;
+  stonfi.common.v1.ChainAddress target_address = 2;
   string input_units = 3;
   string expected_output_units = 4;
   string actual_output_units = 5;
@@ -54,10 +57,13 @@ message SwapChunkProgress {
   string tx_hash = 7;
 }
 
+// Progress details of a single swap step.
 message SwapStepProgress { repeated SwapChunkProgress chunks = 1; }
 
+// Progress details of an entire swap route.
 message SwapRouteProgress { repeated SwapStepProgress steps = 1; }
 
+// Aggregated progress of the whole swap.
 message SwapProgress {
   // Status of the trade
   TradeStatus status = 1;
@@ -77,6 +83,7 @@ message SwapProgress {
 
 message AwaitingTransfer {}
 
+// One event in the swap-progress stream.
 message SwapProgressEvent {
   oneof event {
     AwaitingTransfer awaiting_transfer = 1;
@@ -85,8 +92,5 @@ message SwapProgressEvent {
 
     // The service message to keep connection alive
     KeepAlive keep_alive = 100;
-    // Service message indicating that a request for state has expired. Used
-    // only for WebSocket API
-    Unsubscribed unsubscribed = 101;
   }
 }
