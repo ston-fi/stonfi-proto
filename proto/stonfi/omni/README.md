@@ -21,8 +21,6 @@ Higher-level Omniston documentation is published on `docs.ston.fi`.
 - Integrator fees: <https://docs.ston.fi/developer-section/omniston/referral-fees>
 - Local migration guide: `v1beta8/v1beta7-to-v1beta8-migration-guide.md`
 
-> Note that the documentation above is currently outdated.
-
 ## Directory Layout
 
 - `v1beta8/` — current Omniston protobuf API version

@@ -16,7 +16,5 @@ Public developer documentation lives on `docs.ston.fi`.
 - Omniston SDK docs: <https://docs.ston.fi/developer-section/omniston/sdk>
 - Omniston resolver docs: <https://docs.ston.fi/developer-section/omniston/resolvers>
 
-> Note that the documentation above is currently outdated.
-
 For Omniston-specific guidance in this repository, see
 [`proto/stonfi/omni/README.md`](proto/stonfi/omni/README.md).
