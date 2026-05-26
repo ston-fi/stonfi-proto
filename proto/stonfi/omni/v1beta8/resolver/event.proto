@@ -5,7 +5,6 @@ package stonfi.omni.v1beta8;
 import "stonfi/common/v1/types/asset_id.proto";
 import "stonfi/common/v1/types/chain_address.proto";
 import "stonfi/omni/v1beta8/types/common.proto";
-import "stonfi/omni/v1beta8/types/htlc.proto";
 import "stonfi/omni/v1beta8/types/order.proto";
 import "stonfi/omni/v1beta8/types/quote.proto";
 
@@ -241,12 +240,6 @@ message OrderUpdatedEvent {
     SignedOrder signed_order = 22;
   }
 
-  // The parameters necessary to create the position on **Destination** blockchain.
-  //
-  // TODO: In the next version of API, `OrderSettlementData` should be refactored to
-  // include hash of chain-specific parameters and this field should be removed.
-  optional HtlcDstPositionParams dst_position_params = 30;
-
   // TODO: Dutch auction info or price info.
 }
 
@@ -309,12 +302,6 @@ message ExecutionUpdatedEvent {
     // on the trader's wallet instead of an escrow contract.
     SignedOrder signed_order = 22;
   }
-
-  // The parameters necessary to create the position on **Destination** blockchain.
-  //
-  // TODO: In the next version of API, `OrderSettlementData` should be refactored to
-  // include hash of chain-specific parameters and this field should be removed.
-  optional HtlcDstPositionParams dst_position_params = 30;
 }
 
 // Service sends this event in response to `SignResolverAddressRequest`.

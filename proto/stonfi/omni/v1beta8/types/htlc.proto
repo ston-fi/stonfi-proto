@@ -71,15 +71,3 @@ message HtlcSecrets {
     SecretModeProvided provided = 31;
   }
 }
-
-// Ton-specific parameters necessary to create the position on **Destination** blockchain.
-message TonHtlcDstPositionParams {
-  bytes condition_code_cell = 1;
-}
-
-// The parameters necessary to create the position on **Destination** blockchain.
-message HtlcDstPositionParams {
-  oneof params {
-      TonHtlcDstPositionParams ton = 1;
-  }
-}

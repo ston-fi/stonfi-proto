@@ -78,12 +78,6 @@ message SwapSettlementData {
 }
 
 // Additional data of the quote specific to the **Order settlement**.
-//
-// TODO: In the next version of API this structure should be refactored.
-// Chain-specific parameters, common to all quotes, like `src_wrapped_native_token_address`
-// should be extracted into a separate structure, and the hash of this structure should
-// be included in `OrderSettlementData`. This would allow to reduce size of quotes,
-// still retaining these parameters a part of signed trader's intent.
 message OrderSettlementData {
 
   // Address of the protocol contract on **Source** blockchain that enforces the
