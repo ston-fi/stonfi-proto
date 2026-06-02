@@ -56,12 +56,14 @@ message TonAssetId {
 // Tron asset id (see [https://tron.network/])
 message TronAssetId {
   oneof kind {
+    // Native Tron asset
+    google.protobuf.Empty native = 1;
     // TRC-20 contract address in TRC-20 base58check format (`T...`, 34 chars;
     // see [https://github.com/tronprotocol/tips/blob/master/tip-20.md]).
-    string trc20 = 1;
+    string trc20 = 2;
     // TRC-1155 asset (mirrors ERC-1155 on EVM since Tron is TVM-based;
     // see [https://eips.ethereum.org/EIPS/eip-1155]).
-    Trc1155AssetId trc1155 = 2;
+    Trc1155AssetId trc1155 = 3;
   }
 }
 
