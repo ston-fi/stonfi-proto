@@ -8,6 +8,17 @@ import "stonfi/omni/v1beta8/types/htlc.proto";
 import "stonfi/omni/v1beta8/types/ton.proto";
 
 //////////////////////////////////////////////
+// Vault balance
+//////////////////////////////////////////////
+
+// Balance information for one owner / factory / asset vault entry.
+message TonVaultBalance {
+  stonfi.common.v1.ChainAddress factory_address = 1;
+  stonfi.common.v1.AssetId asset_address = 2;
+  string amount_units = 3;
+}
+
+//////////////////////////////////////////////
 // Escrow vaults
 //////////////////////////////////////////////
 
@@ -26,15 +37,32 @@ message TonEscrowVaultBalancesRequest {
   optional stonfi.common.v1.AssetId asset_address = 3;
 }
 
-// Balance information for one owner / factory / asset vault entry.
-message TonVaultBalance {
-  stonfi.common.v1.ChainAddress factory_address = 1;
-  stonfi.common.v1.AssetId asset_address = 2;
-  string amount_units = 3;
+// Vault balances grouped for a specific owner.
+message TonEscrowVaultBalancesResponse {
+  stonfi.common.v1.ChainAddress owner_address = 1;
+  repeated TonVaultBalance balances = 2;
+}
+
+//////////////////////////////////////////////
+// Fee vaults
+//////////////////////////////////////////////
+message TonFeeVaultBalancesRequest {
+  // Address of the owner.
+  stonfi.common.v1.ChainAddress owner_address = 1;
+
+  // Optional address of **Fee vault factory contract** .
+  //
+  // If omitted, return balance for all vaults.
+  optional stonfi.common.v1.ChainAddress vault_factory_address = 2;
+
+  // Optional address of the asset.
+  //
+  // If omitted, return vault balance for all assets.
+  optional stonfi.common.v1.AssetId asset_address = 3;
 }
 
 // Vault balances grouped for a specific owner.
-message TonEscrowVaultBalancesResponse {
+message TonFeeVaultBalancesResponse {
   stonfi.common.v1.ChainAddress owner_address = 1;
   repeated TonVaultBalance balances = 2;
 }
@@ -160,9 +188,13 @@ message BuildTonEscrowCancellationRequest {
 // TON-specific functions
 service TonRpc {
 
-  // Get owner's positions in one or multiple vaults.
+  // Get owner's positions in one or multiple vaults of escrow contract.
   rpc GetEscrowVaultBalances(TonEscrowVaultBalancesRequest)
       returns (TonEscrowVaultBalancesResponse) {}
+
+  // Get owner's positions in one or multiple fee vaults.
+  rpc GetFeeVaultBalances(TonFeeVaultBalancesRequest)
+      returns (TonFeeVaultBalancesResponse) {}
 
   // Build a transaction body to perform the swap.
   rpc BuildSwap(BuildTonSwapRequest) returns (TonTransaction) {}

@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package stonfi.omni.history.v1;
+
+import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/common/v1/types/chain_address.proto";
+import "stonfi/omni/history/v1/common.proto";
+import "stonfi/omni/v1beta8/types/common.proto";
+
+// Time bucket size used for aggregate rows.
+enum TimeGrouping {
+  // No time grouping is applied.
+  TIME_GROUPING_UNSPECIFIED = 0;
+
+  // Groups rows by UTC calendar day.
+  TIME_GROUPING_DAY = 1;
+
+  // Groups rows by UTC hour.
+  TIME_GROUPING_HOUR = 2;
+}
+
+// Request for finalized order aggregate statistics.
+message FinalizedOrderAggregatesRequest {
+  // Optional filters applied before aggregation.
+  //
+  // The result must match all supplied filters.
+  //
+  // If omitted, only requests without dimensions or time grouping are supported;
+  // the service returns a single row for all available data.
+  //
+  // If specified, the filters must include `time_range` with a maximum duration
+  // of 31 days (744 hours).
+  repeated Filter filters = 1;
+
+  // Time grouping for aggregate rows.
+  //
+  // When omitted or unspecified, no time grouping is applied.
+  optional TimeGrouping time_grouping = 2;
+
+  // Dimensions to group by.
+  //
+  // Supported dimension fields:
+  // - `src_chain_id`
+  // - `dst_chain_id`
+  // - `input_asset`
+  // - `output_asset`
+  // - `src_trader_address`
+  // - `dst_trader_address`
+  // - `src_resolver_address`
+  // - `dst_resolver_address`
+  // - `integrator_address`
+  // - `resolver_id`
+  // - `status`
+  //
+  // When omitted, the service returns one aggregate row for each requested time
+  // period, or a single row when time grouping is not requested.
+  optional stonfi.common.StringList dimensions = 3;
+
+  // Optional aggregate field selector.
+  //
+  // Top-level aggregates:
+  // - `finalized_orders_volume_usd`
+  // - `filled_orders_volume_usd`
+  // - `protocol_fees_usd`
+  // - `integrator_fees_usd`
+  // - `finalized_orders_count`
+  // - `unique_trader_wallets_count`
+  //
+  // When omitted, the service may return the full metric set.
+  optional stonfi.common.StringList aggregates_list = 100;
+}
+
+// Response with finalized order aggregate statistics.
+message FinalizedOrderAggregatesResponse {
+  // Aggregated rows.
+  repeated FinalizedOrderAggregatesRow rows = 1;
+}
+
+// One aggregate row.
+//
+// The row contains zero or more **Dimension** fields and one or more
+// **Aggregate** fields. Rows where all aggregate values are zero are omitted.
+message FinalizedOrderAggregatesRow {
+
+  // **Dimension:** Start of the time period.
+  //
+  // The value is formatted as an ISO 8601 UTC timestamp
+  // (`YYYY-MM-DDTHH:mm:SSZ`). This field is set only when time grouping is
+  // requested.
+  optional string time_period = 1;
+
+  // **Dimension:** Source blockchain.
+  optional string src_chain_id = 2;
+
+  // **Dimension:** Destination blockchain.
+  optional string dst_chain_id = 3;
+
+  // **Dimension:** Blockchain-specific identifier of the **Input asset**.
+  optional stonfi.common.v1.AssetId input_asset = 4;
+
+  // **Dimension:** Blockchain-specific identifier of the **Output asset**.
+  optional stonfi.common.v1.AssetId output_asset = 5;
+
+  // **Dimension:** Trader wallet address on the source blockchain.
+  optional stonfi.common.v1.ChainAddress src_trader_address = 6;
+
+  // **Dimension:** Trader wallet address on the destination blockchain.
+  optional stonfi.common.v1.ChainAddress dst_trader_address = 7;
+
+  // **Dimension:** Resolver wallet address on the source blockchain.
+  optional stonfi.common.v1.ChainAddress src_resolver_address = 8;
+
+  // **Dimension:** Resolver wallet address on the destination blockchain.
+  optional stonfi.common.v1.ChainAddress dst_resolver_address = 9;
+
+  // **Dimension:** Integrator wallet address.
+  optional stonfi.common.v1.ChainAddress integrator_address = 10;
+
+  // **Dimension:** Resolver ID.
+  optional string resolver_id = 11;
+
+  // **Dimension:** Final trade status.
+  //
+  // History contains only finalized orders, so `TRADE_STATUS_IN_PROGRESS` is not
+  // expected in this field.
+  optional stonfi.omni.v1beta8.TradeStatus status = 12;
+
+  // **Aggregate:** Quoted input volume of finalized orders in USD, as a decimal
+  // string, for example "12345.67".
+  optional string finalized_orders_volume_usd = 100;
+
+  // **Aggregate:** Filled input volume of finalized orders in USD, as a decimal
+  // string, for example "12345.67".
+  optional string filled_orders_volume_usd = 101;
+
+  // **Aggregate:** Protocol fees in USD, as a decimal string, for example
+  // "12345.67".
+  optional string protocol_fees_usd = 102;
+
+  // **Aggregate:** Integrator fees in USD, as a decimal string, for example
+  // "12345.67".
+  optional string integrator_fees_usd = 103;
+
+  // **Aggregate:** Number of finalized orders.
+  optional uint64 finalized_orders_count = 110;
+
+  // **Aggregate:** Number of unique trader wallets.
+  optional uint64 unique_trader_wallets_count = 111;
+
+}
+
+// Aggregate statistics service for finalized orders.
+//
+// Aggregate requests are subject to service-defined computation limits. At the
+// moment, the filtered data range must not exceed 31 days. These limits may
+// become stricter in the future, and the service may introduce rate limiting.
+service AggregatesRpc {
+
+  // Returns aggregate statistics for finalized orders.
+  //
+  // The method is not paginated. Clients choose which metrics to return with
+  // `aggregates_list`. If the request is too broad, the service may reject it
+  // and require narrower filters or grouping.
+  rpc FinalizedOrderAggregates(FinalizedOrderAggregatesRequest)
+      returns (FinalizedOrderAggregatesResponse) {}
+}

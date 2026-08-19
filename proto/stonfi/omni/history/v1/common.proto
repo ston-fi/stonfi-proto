@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package stonfi.omni.history.v1;
+
+import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/chain_address.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/omni/v1beta8/types/common.proto";
+
+// Inclusive/exclusive order creation timestamp range filter.
+message TimeRange {
+  // Inclusive lower bound for the order creation timestamp, in UTC seconds.
+  optional uint64 from_timestamp = 1;
+
+  // Exclusive upper bound for the order creation timestamp, in UTC seconds.
+  optional uint64 to_timestamp = 2;
+}
+
+// List of blockchain-specific asset identifiers.
+message AssetList {
+  // Asset identifiers.
+  repeated stonfi.common.v1.AssetId assets = 1;
+}
+
+// List of blockchain-specific addresses.
+message AddressList {
+  // Addresses.
+  repeated stonfi.common.v1.ChainAddress addresses = 1;
+}
+
+// Filter expression for finalized order history and aggregate requests.
+message Filter {
+  // Filter condition. Multiple filters in a request are combined with AND
+  // semantics. Repeated values inside a single filter are combined with OR
+  // semantics.
+  oneof filter {
+    // Filters by order creation timestamp.
+    TimeRange time_range = 1;
+
+    // Filters by final trade status.
+    //
+    // History contains only finalized orders, so `TRADE_STATUS_IN_PROGRESS` is
+    // not expected to match any history rows.
+    stonfi.omni.v1beta8.TradeStatus status = 2;
+
+    // Filters by source blockchain.
+    stonfi.common.StringList src_chain_in_list = 10;
+
+    // Filters by destination blockchain.
+    stonfi.common.StringList dst_chain_in_list = 11;
+
+    // Filters by either source or destination blockchain.
+    stonfi.common.StringList either_chain_in_list = 12;
+
+    // Filters by input asset.
+    AssetList input_asset_in_list = 20;
+
+    // Filters by output asset.
+    AssetList output_asset_in_list = 21;
+
+    // Filters by either input or output asset.
+    AssetList either_asset_in_list = 22;
+
+    // Filters by source-side trader wallet address.
+    AddressList trader_src_address_in_list = 30;
+
+    // Filters by destination-side trader wallet address.
+    AddressList trader_dst_address_in_list = 31;
+
+    // Filters by either source-side or destination-side trader wallet address.
+    AddressList trader_either_address_in_list = 32;
+
+    // Filters by source-side resolver wallet address.
+    AddressList resolver_src_address_in_list = 40;
+
+    // Filters by destination-side resolver wallet address.
+    AddressList resolver_dst_address_in_list = 41;
+
+    // Filters by either source-side or destination-side resolver wallet address.
+    AddressList resolver_either_address_in_list = 42;
+
+    // Filters by resolver ID.
+    stonfi.common.StringList resolver_id_in_list = 43;
+
+    // Filters by integrator wallet address.
+    AddressList integrator_address_in_list = 50;
+
+  }
+}

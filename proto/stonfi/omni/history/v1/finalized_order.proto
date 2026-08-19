@@ -1,0 +1,168 @@
+syntax = "proto3";
+
+package stonfi.omni.history.v1;
+
+import "stonfi/common/types.proto";
+import "stonfi/common/v1/types/chain_address.proto";
+import "stonfi/common/v1/types/asset_id.proto";
+import "stonfi/omni/history/v1/common.proto";
+import "stonfi/omni/v1beta8/types/common.proto";
+
+// Request for finalized order history.
+message ListFinalizedOrdersRequest {
+  // Optional filters applied before paging.
+  //
+  // The result must match all supplied filters.
+  repeated Filter filters = 1;
+
+  // Logical time cursor for pagination.
+  //
+  // Set this to the `lt` value of the last item from the previous response. The
+  // next page starts after this value. When omitted, scanning starts from the
+  // beginning of the filtered result set.
+  optional uint64 prev_lt = 10;
+
+  // Maximum number of finalized orders to return.
+  //
+  // Valid values are in range [1, 1000].
+  //
+  // When omitted, the default value is 1000.
+  optional uint32 limit = 11;
+
+  // Optional response field selector.
+  //
+  // When specified, the service may omit optional fields that were not
+  // requested by the client. When omitted, the service returns all fields.
+  optional stonfi.common.StringList field_list = 20;
+}
+
+// Finalized order history row.
+message FinalizedOrder {
+  // Monotonic logical time assigned to this finalized order.
+  //
+  // This value is used for stable ascending scans and pagination.
+  uint64 lt = 1;
+
+  // Final status of the order.
+  //
+  // History contains only finalized orders, so `TRADE_STATUS_IN_PROGRESS` is not
+  // expected in this field.
+  stonfi.omni.v1beta8.TradeStatus status = 2;
+
+  // ID of the quote received from `QuoteRpc`.
+  optional string quote_id = 3;
+
+  // Blockchain-specific identifier of the **Input asset**.
+  stonfi.common.v1.AssetId input_asset = 10;
+
+  // Blockchain-specific identifier of the **Output asset**.
+  stonfi.common.v1.AssetId output_asset = 11;
+
+  // Amount of **Input asset** specified in the quote.
+  optional string quote_input_units = 12;
+
+  // Amount of **Output asset** specified in the quote.
+  optional string quote_output_units = 13;
+
+  // Integrator fee in percentage points (1/1,000,000 or 0.0001%).
+  //
+  // The integrator fee is always collected in **Output asset**.
+  optional uint32 integrator_fee_pips = 20;
+
+  // Protocol fee for the corresponding settlement method in percentage points
+  // (1/1,000,000 or 0.0001%).
+  //
+  // The protocol fee is always collected in **Output asset**.
+  optional uint32 protocol_fee_pips = 21;
+
+  // Actual amount of **Input asset** that was filled.
+  //
+  // For partially filled orders, this value describes the input amount that was
+  // actually filled, not the original quoted amount.
+  optional string actual_input_units = 30;
+
+  // Actual amount of **Output asset** that was delivered.
+  //
+  // For partially filled orders, this value describes the output amount that was
+  // actually delivered, not the original quoted amount.
+  optional string actual_output_units = 31;
+
+  // Protocol fee amount in **Output asset**.
+  //
+  // The protocol fee is always collected in **Output asset**.
+  optional string actual_protocol_fee_units = 32;
+
+  // Integrator fee amount in **Output asset**.
+  //
+  // The integrator fee is always collected in **Output asset**.
+  optional string actual_integrator_fee_units = 33;
+
+  // Trader wallet address on the source blockchain.
+  stonfi.common.v1.ChainAddress src_trader_address = 40;
+
+  // Trader wallet address on the destination blockchain.
+  stonfi.common.v1.ChainAddress dst_trader_address = 41;
+
+  // Resolver wallet address on the source blockchain.
+  stonfi.common.v1.ChainAddress src_resolver_address = 42;
+
+  // Resolver wallet address on the destination blockchain.
+  stonfi.common.v1.ChainAddress dst_resolver_address = 43;
+
+  // Integrator wallet address that receives fees on the destination blockchain.
+  optional stonfi.common.v1.ChainAddress integrator_address = 44;
+
+  // Resolver ID.
+  optional string resolver_id = 50;
+
+  // Human-readable resolver name.
+  optional string resolver_name = 51;
+
+  // Timestamp when the RFQ was requested, in UTC seconds.
+  optional uint64 quote_request_time = 60;
+
+  // Timestamp when the quote was produced, in UTC seconds.
+  optional uint64 quote_time = 61;
+
+  // Timestamp when the order was created, in UTC seconds.
+  optional uint64 order_create_time = 62;
+
+  // Timestamp when the order reached a final state, in UTC seconds.
+  optional uint64 order_finalize_time = 63;
+
+}
+
+// Response for finalized order history.
+message ListFinalizedOrdersResponse {
+  // Finalized orders matching the request.
+  repeated FinalizedOrder orders = 1;
+
+  // Indicates whether more matching items are available.
+  //
+  // If true, request the next page with the last returned order's `lt` as
+  // `prev_lt`.
+  bool has_next_page = 2;
+}
+
+// Request for one finalized order by quote ID.
+message FinalizedOrderByQuoteIdRequest {
+  // ID of the quote received from `QuoteRpc`.
+  string quote_id = 1;
+
+  // Optional response field selector.
+  //
+  // When specified, the service may omit optional fields that were not
+  // requested by the client. When omitted, the service returns all fields.
+  optional stonfi.common.StringList field_list = 20;
+}
+
+// Finalized order history service.
+service FinalizedOrdersRpc {
+  // Returns finalized orders sorted by `lt` in ascending order.
+  rpc List(ListFinalizedOrdersRequest)
+      returns (ListFinalizedOrdersResponse) {}
+
+  // Returns one finalized order by quote ID.
+  rpc GetByQuoteId(FinalizedOrderByQuoteIdRequest)
+      returns (FinalizedOrder) {}
+}

@@ -39,12 +39,15 @@
 * **Input position** — position on the **Source blockchain** that holds or represents the **Input asset** for an **Execution**.
 * **Output position** — position on the **Destination blockchain** that holds or represents the **Output asset** for an **Execution**.
 
-## Contracts
+## Contracts and vaults
 
 * **Protocol contract** — smart contract used by the protocol to enforce settlement rules on a blockchain.
 * **Escrow factory contract** — contract that creates or manages escrow positions for **Order settlement**.
 * **Escrow position contract** — contract instance that stores the assets and state of a particular escrow-backed position.
 * **Vault contract** — contract that stores the funds of participants for later use in settlement flows.
+* **Escrow vault** — vault managed by an **Escrow factory contract** that holds assets used in **Order settlement**.
+* **Fee vault factory contract** — contract that creates or manages **Fee vaults**.
+* **Fee vault** — vault that accumulates fees for a specific owner and asset.
 
 ## Operations
 

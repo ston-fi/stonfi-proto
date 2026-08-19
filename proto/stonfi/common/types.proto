@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package stonfi.common;
+
+// Reusable list of string values.
+//
+// This wrapper is used when a repeated string field must be passed as a nested
+// message, for example in optional field selectors, dimension selectors, or
+// string-based filters.
+message StringList {
+  // String values.
+  repeated string values = 1;
+}

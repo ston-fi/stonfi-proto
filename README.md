@@ -6,7 +6,6 @@ It includes:
 
 - public API definitions;
 - shared protocol schemas;
-- Omniston protocol schemas.
 
 ## Documentation
 
